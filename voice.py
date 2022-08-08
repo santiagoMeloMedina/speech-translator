@@ -5,14 +5,21 @@ import pyttsx3 as tts
 from pyttsx3.voice import Voice as ttsVoice
 import googletrans
 from googletrans.models import Translated as gtTranslated
-from typing import List
+from typing import Any, List, Optional
 import random
+import pydantic
 
 
 class SpeechTranslator:
     class VoiceGender(enum.Enum):
         MALE = "VoiceGenderMale"
         FEMALE = "VoiceGenderFemale"
+
+    class TTSSettings(pydantic.BaseModel):
+        to_lang: str
+        from_lang: Optional[str]
+        name: Optional[Any]
+        gender: Optional[Any]
 
     def __init__(
         self, default_voice_id: str = "com.apple.speech.synthesis.voice.samantha"
@@ -62,6 +69,13 @@ class SpeechTranslator:
         )
         voice = self.get_voice(**{"language": translated.dest, **kwargs})
         self.read_text(translated.text, voice)
+
+    def set_default_translate(self, **kwargs) -> None:
+        self.tts_settings = self.TTSSettings(**kwargs)
+
+    def default_read_translate(self, text: str):
+        self.read_translated(text, **self.tts_settings.dict())
+
 
 if __name__ == "__main__":
     SpeechTranslator().read_translated(
